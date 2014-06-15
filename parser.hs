@@ -65,11 +65,11 @@ parseQuoted = do
     return $ List [Atom "quote", x]
 
 -- Define a function to call our parser and handle any possible errors
-readExpr :: String -> String
+readExpr :: String -> LispVal
 readExpr input = case parse parseExpr "lisp" input of
     -- parse returns an Either: left for error, right for a value
-    Left err -> "No match: " ++ show err
-    Right val -> "Found " ++ show val
+    Left err -> String $ "No match: " ++ show err
+    Right val -> val
 
 
 -- Time to evaluate (may want to refactor this)
@@ -91,7 +91,17 @@ unwordsList = unwords . map showVal
 -- add showVal as an instance method to the Show class
 instance Show LispVal where show = showVal
 
+
+-- Eval
+eval :: LispVal -> LispVal
+-- @ pattern, matches val's are a string and binds it to
+-- the entire string
+eval val@(String _) = val
+eval val@(Number _) = val
+eval val@(Bool _) = val
+-- here, val is `nested`
+eval (List [Atom "quote", val]) = val
+
+
 main :: IO ()
-main = do
-    args <- getArgs
-    putStrLn (readExpr (args !! 0))
+main = getArgs >>= print . eval . readExpr . head
