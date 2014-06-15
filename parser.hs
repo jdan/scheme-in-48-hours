@@ -69,7 +69,27 @@ readExpr :: String -> String
 readExpr input = case parse parseExpr "lisp" input of
     -- parse returns an Either: left for error, right for a value
     Left err -> "No match: " ++ show err
-    Right val -> "Found value"
+    Right val -> "Found " ++ show val
+
+
+-- Time to evaluate (may want to refactor this)
+showVal :: LispVal -> String
+showVal (String contents) = "\"" ++ contents ++ "\""
+showVal (Atom name) = name
+showVal (Number contents) = show contents
+showVal (Bool True) = "#t"
+showVal (Bool False) = "#f"
+showVal (List contents) = "(" ++ unwordsList contents ++ ")"
+showVal (DottedList head tail) = "(" ++ unwordsList head ++ " . " ++ showVal tail ++ ")"
+
+-- "point free" style
+-- writing definitions purely in terms of function composition
+-- and partial application
+unwordsList :: [LispVal] -> String
+unwordsList = unwords . map showVal
+
+-- add showVal as an instance method to the Show class
+instance Show LispVal where show = showVal
 
 main :: IO ()
 main = do
