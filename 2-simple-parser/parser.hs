@@ -10,9 +10,13 @@ import System.Environment
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
+-- Define a parser that recognizes any number of whitespace characters
+spaces :: Parser ()
+spaces = skipMany1 space
+
 -- Define a function to call our parser and handle any possible errors
 readExpr :: String -> String
-readExpr input = case parse symbol "lisp" input of
+readExpr input = case parse (spaces >> symbol) "lisp" input of
     -- parse returns an Either: left for error, right for a value
     Left err -> "No match: " ++ show err
     Right val -> "Found value"
