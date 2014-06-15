@@ -36,12 +36,33 @@ parseAtom = do
                _    -> Atom atom
 
 parseNumber :: Parser LispVal
+-- liftM so we can use (Number . read) on a many1
 parseNumber = liftM (Number . read) $ many1 digit
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
         <|> parseString
         <|> parseNumber
+        <|> parseQuoted
+        <|> do char '('
+               x <- try parseList <|> parseDottedList
+               char ')'
+               return x
+
+parseList :: Parser LispVal
+parseList = liftM List $ sepBy parseExpr spaces
+
+parseDottedList :: Parser LispVal
+parseDottedList = do
+    head <- endBy parseExpr spaces
+    tail <- char '.' >> spaces >> parseExpr
+    return $ DottedList head tail
+
+parseQuoted :: Parser LispVal
+parseQuoted = do
+    char '\''
+    x <- parseExpr
+    return $ List [Atom "quote", x]
 
 -- Define a function to call our parser and handle any possible errors
 readExpr :: String -> String
